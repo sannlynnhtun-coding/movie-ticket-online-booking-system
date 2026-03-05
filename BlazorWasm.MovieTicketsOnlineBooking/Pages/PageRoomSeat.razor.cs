@@ -18,7 +18,7 @@ public partial class PageRoomSeat
     private RoomDetailModel? _roomDetail;
     private MovieScheduleViewModel? _selectedShow;
     private DateTime ShowDate => _selectedShow?.ShowDateTime ?? default;
-    private int ShowDateId => _selectedShow?.ShowDateId ?? 0;
+    private int ShowId => _selectedShow?.ShowId ?? 0;
     private List<BookingModel> _bookingData { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
@@ -55,8 +55,8 @@ public partial class PageRoomSeat
         var result = _bookingData.FirstOrDefault(v => v.SeatId == model.SeatId);
         if (result is not null) return;
 
-        await _dbService.SetBookingList(model, RoomId, CinemaId, MovieId, ShowDateId, ShowDate);
-        _bookingData = await _dbService.GetBookingList(RoomId, CinemaId, MovieId, ShowDateId) ?? new();
+        await _dbService.SetBookingList(model, RoomId, CinemaId, MovieId, ShowId, ShowDate);
+        _bookingData = await _dbService.GetBookingList(RoomId, CinemaId, MovieId, ShowId) ?? new();
     }
 
     private async Task SelectedShowDate(MovieScheduleViewModel show)
@@ -74,7 +74,7 @@ public partial class PageRoomSeat
             return;
         }
 
-        _bookingData = await _dbService.GetBookingList(RoomId, CinemaId, MovieId, ShowDateId) ?? new();
+        _bookingData = await _dbService.GetBookingList(RoomId, CinemaId, MovieId, ShowId) ?? new();
         await LoadBookedTicketsForDate();
     }
 
@@ -85,16 +85,16 @@ public partial class PageRoomSeat
         var seatIdsInRoom = _roomDetail?.RoomSeatData?.Select(s => s.SeatId).ToHashSet() ?? new HashSet<int>();
 
         var scopedServer = serverVouchers.Where(v =>
-            v.ShowDateId == ShowDateId &&
+            v.ShowId == ShowId &&
             seatIdsInRoom.Contains(v.SeatId));
 
         var matchedLocal = localTickets
-            .Where(t => t.ShowDateId == ShowDateId && seatIdsInRoom.Contains(t.SeatId))
+            .Where(t => t.ShowId == ShowId && seatIdsInRoom.Contains(t.SeatId))
             .Select(t => new BookingVoucherDetailViewModel
             {
                 SeatId = t.SeatId,
                 Seat = t.Seat,
-                ShowDateId = t.ShowDateId,
+                ShowId = t.ShowId,
                 ShowDate = t.ShowDate
             });
 
@@ -108,7 +108,7 @@ public partial class PageRoomSeat
     private async Task SetBookingVoucher()
     {
         if (_selectedShow is null) return;
-        await _dbService.SetBookingVoucher(RoomId, CinemaId, MovieId, ShowDateId);
+        await _dbService.SetBookingVoucher(RoomId, CinemaId, MovieId, ShowId);
         NavManager.NavigateTo("/voucher");
     }
 
@@ -125,8 +125,8 @@ public partial class PageRoomSeat
         if (!result.Canceled)
         {
             if (seatId == default || _selectedShow is null) return;
-            await _dbService.DeleteBookingSeat(seatId, RoomId, CinemaId, MovieId, ShowDateId);
-            _bookingData = await _dbService.GetBookingList(RoomId, CinemaId, MovieId, ShowDateId) ?? new();
+            await _dbService.DeleteBookingSeat(seatId, RoomId, CinemaId, MovieId, ShowId);
+            _bookingData = await _dbService.GetBookingList(RoomId, CinemaId, MovieId, ShowId) ?? new();
         }
     }
 }

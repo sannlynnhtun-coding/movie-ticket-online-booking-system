@@ -6,7 +6,7 @@
         public int RoomId { get; set; }
         public int CinemaId { get; set; }
         public int MovieId { get; set; }
-        public int ShowDateId { get; set; }
+        public int ShowId { get; set; }
         public int SeatId { get; set; }
         public string SeatNo { get; set; }
         public string RowName { get; set; }

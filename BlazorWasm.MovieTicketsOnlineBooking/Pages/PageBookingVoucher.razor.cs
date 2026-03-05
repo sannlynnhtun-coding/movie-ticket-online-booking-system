@@ -33,7 +33,7 @@ public partial class PageBookingVoucher
                 SeatId = v.SeatId,
                 Seat = v.Seat,
                 SeatPrice = v.SeatPrice,
-                ShowDateId = v.ShowDateId,
+                ShowId = v.ShowId,
                 ShowDate = v.ShowDate,
                 BookingDate = v.BookingDate
             }).ToList();

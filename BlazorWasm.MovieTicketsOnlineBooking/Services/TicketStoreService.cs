@@ -32,7 +32,7 @@ public class TicketStoreService : ITicketStoreService, IBrowserStoreService
             seatId                 = t.SeatId,
             seat                   = t.Seat,
             seatPrice              = t.SeatPrice,
-            showDateId             = t.ShowDateId,
+            showId                 = t.ShowId,
             showDate               = t.ShowDate.ToString("o"),
             bookingDate            = t.BookingDate.ToString("o")
         }).ToArray();
@@ -75,7 +75,7 @@ public class TicketStoreService : ITicketStoreService, IBrowserStoreService
             SeatId                 = el.GetProperty("seatId").GetInt32(),
             Seat                   = el.GetProperty("seat").GetString() ?? "",
             SeatPrice              = el.GetProperty("seatPrice").GetInt32(),
-            ShowDateId             = el.TryGetProperty("showDateId", out var sid) ? sid.GetInt32() : 0,
+            ShowId                 = el.TryGetProperty("showId", out var sid) ? sid.GetInt32() : 0,
             ShowDate               = DateTime.Parse(el.GetProperty("showDate").GetString() ?? DateTime.MinValue.ToString("o")),
             BookingDate            = DateTime.Parse(el.GetProperty("bookingDate").GetString() ?? DateTime.MinValue.ToString("o"))
         };
@@ -83,20 +83,26 @@ public class TicketStoreService : ITicketStoreService, IBrowserStoreService
 
     public async Task SaveBookingDraftAsync(BookingModel draft)
     {
+        var scopeKey = BuildScopeKey(draft.RoomId, draft.CinemaId, draft.MovieId, draft.ShowId);
+        
+        // Ensure to delete existing draft for this seat in this scope before saving a new one 
+        // to avoid unique constraint violation in IndexedDB (scopeKeySeatId index).
+        await DeleteBookingDraftBySeatAsync(scopeKey, draft.SeatId);
+
         var payload = new
         {
             bookingId = draft.BookingId.ToString(),
             roomId = draft.RoomId,
             cinemaId = draft.CinemaId,
             movieId = draft.MovieId,
-            showDateId = draft.ShowDateId,
+            showId = draft.ShowId,
             seatId = draft.SeatId,
             seatNo = draft.SeatNo,
             rowName = draft.RowName,
             seatType = draft.SeatType,
             seatPrice = draft.SeatPrice,
             showDate = draft.ShowDate.ToString("o"),
-            scopeKey = BuildScopeKey(draft.RoomId, draft.CinemaId, draft.MovieId, draft.ShowDateId)
+            scopeKey = scopeKey
         };
 
         await _js.InvokeAsync<bool>("cinematix.saveBookingDraft", payload);
@@ -142,7 +148,7 @@ public class TicketStoreService : ITicketStoreService, IBrowserStoreService
             seatId = detail.SeatId,
             seat = detail.Seat,
             seatPrice = detail.SeatPrice,
-            showDateId = detail.ShowDateId,
+            showId = detail.ShowId,
             showDate = detail.ShowDate.ToString("o"),
             bookingDate = detail.BookingDate.ToString("o")
         };
@@ -186,8 +192,8 @@ public class TicketStoreService : ITicketStoreService, IBrowserStoreService
         }
     }
 
-    private static string BuildScopeKey(int roomId, int cinemaId, int movieId, int showDateId)
-        => $"{roomId}:{cinemaId}:{movieId}:{showDateId}";
+    private static string BuildScopeKey(int roomId, int cinemaId, int movieId, int showId)
+        => $"{roomId}:{cinemaId}:{movieId}:{showId}";
 
     private static BookingModel MapJsonToBookingModel(JsonElement el)
     {
@@ -197,7 +203,7 @@ public class TicketStoreService : ITicketStoreService, IBrowserStoreService
             RoomId = el.GetProperty("roomId").GetInt32(),
             CinemaId = el.GetProperty("cinemaId").GetInt32(),
             MovieId = el.GetProperty("movieId").GetInt32(),
-            ShowDateId = el.GetProperty("showDateId").GetInt32(),
+            ShowId = el.GetProperty("showId").GetInt32(),
             SeatId = el.GetProperty("seatId").GetInt32(),
             SeatNo = el.GetProperty("seatNo").GetString() ?? "",
             RowName = el.GetProperty("rowName").GetString() ?? "",
@@ -219,7 +225,7 @@ public class TicketStoreService : ITicketStoreService, IBrowserStoreService
             SeatId = el.GetProperty("seatId").GetInt32(),
             Seat = el.GetProperty("seat").GetString() ?? "",
             SeatPrice = el.GetProperty("seatPrice").GetInt32(),
-            ShowDateId = el.TryGetProperty("showDateId", out var sid) ? sid.GetInt32() : 0,
+            ShowId = el.TryGetProperty("showId", out var sid) ? sid.GetInt32() : 0,
             ShowDate = DateTime.Parse(el.GetProperty("showDate").GetString() ?? DateTime.MinValue.ToString("o")),
             BookingDate = DateTime.Parse(el.GetProperty("bookingDate").GetString() ?? DateTime.MinValue.ToString("o"))
         };

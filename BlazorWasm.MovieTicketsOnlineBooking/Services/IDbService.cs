@@ -13,21 +13,21 @@ public interface IDbService
     Task<List<CinemaRoomModel>?> GetCinemaAndRoom(int movieId);
     Task<RoomDetailModel> GetRoomDetail(int roomId, int cinemaId, int movieId);
     Task<MovieResponseModel?> GetMovieListByPagination(int pageNo, int pageSize);
-    Task SetBookingList(RoomSeatViewModel model, int roomId, int cinemaId, int movieId, int showDateId, DateTime showDateTime);
-    Task<List<BookingModel>?> GetBookingList(int roomId, int cinemaId, int movieId, int showDateId);
+    Task SetBookingList(RoomSeatViewModel model, int roomId, int cinemaId, int movieId, int showId, DateTime showDateTime);
+    Task<List<BookingModel>?> GetBookingList(int roomId, int cinemaId, int movieId, int showId);
 
     Task<MovieSearchModel> SearchMovie(string title, int pageNo = 1,
         int pageSize = 3);
 
     Task<MovieViewModel> GetMovieByRoomId(int roomId);
-    Task SetBookingVoucher(int roomId, int cinemaId, int movieId, int showDateId);
+    Task SetBookingVoucher(int roomId, int cinemaId, int movieId, int showId);
     Task<List<BookingVoucherDetailViewModel>> GetBookingVoucherDetail();
     Task<List<BookingVoucherHeadDataModel>> GetBookingVoucherHead();
-    Task DeleteBookingSeat(int seatId, int roomId, int cinemaId, int movieId, int showDateId);
+    Task DeleteBookingSeat(int seatId, int roomId, int cinemaId, int movieId, int showId);
 
     Task<CinemaRoomPaginationModel?> GetCinemaRoomPagination(int movieId,
         int pageNo = 1, int pageSize = 5);
 
     Task ClearBookingList();
-    Task ClearBookingList(int roomId, int cinemaId, int movieId, int showDateId);
+    Task ClearBookingList(int roomId, int cinemaId, int movieId, int showId);
 }

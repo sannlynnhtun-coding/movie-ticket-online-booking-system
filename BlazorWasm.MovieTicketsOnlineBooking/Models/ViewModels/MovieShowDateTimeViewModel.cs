@@ -3,6 +3,7 @@
     public class MovieShowDateTimeViewModel
     {
         public int ShowDateId { get; set; }
+        public int ShowId { get; set; }
         public int CinemaId { get; set; }
         public int RoomId { get; set; }
         public int MovieId { get; set; }

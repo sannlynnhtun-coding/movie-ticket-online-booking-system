@@ -1,4 +1,4 @@
-﻿using BlazorWasm.MovieTicketsOnlineBooking.Models;
+using BlazorWasm.MovieTicketsOnlineBooking.Models;
 using BlazorWasm.MovieTicketsOnlineBooking.Models.DataModels;
 using BlazorWasm.MovieTicketsOnlineBooking.Models.ViewModels;
 using Newtonsoft.Json;
@@ -53,7 +53,7 @@ public static class DevCode
         List<MovieShowDateTimeViewModel> viewModels = dataModels.Select(dataModel =>
         new MovieShowDateTimeViewModel
         {
-            ShowDateId = dataModel.ShowDateId,
+            ShowId = dataModel.ShowId,
             CinemaId = dataModel.CinemaId,
             MovieId = dataModel.MovieId,
             ShowDateTime = dataModel.ShowDateTime,
