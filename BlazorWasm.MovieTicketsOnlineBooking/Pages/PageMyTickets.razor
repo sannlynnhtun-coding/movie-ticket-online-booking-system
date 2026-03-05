@@ -1,13 +1,12 @@
 @page "/my-tickets"
 @inject NavigationManager NavManager
 @inject ITicketStoreService TicketStore
-@inject ISnackbar Snackbar
 
 <div class="cx-fadein" style="padding-top:80px;max-width:800px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:48px;">
     @if (_isLoading)
     {
         <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;flex-direction:column;gap:16px;">
-            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <div class="h-10 w-10 border-4 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
             <p style="color:var(--fg-muted);font-weight:500;">Loading Tickets...</p>
         </div>
     }
@@ -113,14 +112,12 @@
     private async Task DeleteTicket(BlazorWasm.MovieTicketsOnlineBooking.Models.TicketRecord record)
     {
         await TicketStore.DeleteTicketAsync(record.BookingVoucherDetailId);
-        Snackbar.Add($"Ticket for {record.MovieName} removed.", Severity.Info);
         await LoadTickets();
     }
 
     private async Task ClearAllTickets()
     {
         await TicketStore.ClearAllTicketsAsync();
-        Snackbar.Add("All tickets cleared.", Severity.Info);
         await LoadTickets();
     }
 }

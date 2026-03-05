@@ -10,7 +10,11 @@ public interface IDbService
     Task<List<CinemaViewModel>?> GetCinemaList();
     Task<List<CinemaRoomViewModel>?> GetCinemaRoom();
     Task<List<MovieShowDateTimeViewModel>?> GetMovieShowDateTime();
+    Task<List<MovieScheduleViewModel>?> GetMovieSchedule();
+    Task<List<MovieScheduleViewModel>> GetRoomShowSchedules(int roomId, int cinemaId, int movieId, DateTime? showDate = null);
+    Task<List<DateTime>> GetMovieAvailableDates(int movieId);
     Task<List<CinemaRoomModel>?> GetCinemaAndRoom(int movieId);
+    Task<List<CinemaRoomModel>?> GetCinemaAndRoom(int movieId, DateTime? showDate);
     Task<RoomDetailModel> GetRoomDetail(int roomId, int cinemaId, int movieId);
     Task<MovieResponseModel?> GetMovieListByPagination(int pageNo, int pageSize);
     Task SetBookingList(RoomSeatViewModel model, int roomId, int cinemaId, int movieId, int showId, DateTime showDateTime);
@@ -26,6 +30,8 @@ public interface IDbService
     Task DeleteBookingSeat(int seatId, int roomId, int cinemaId, int movieId, int showId);
 
     Task<CinemaRoomPaginationModel?> GetCinemaRoomPagination(int movieId,
+        int pageNo = 1, int pageSize = 5);
+    Task<CinemaRoomPaginationModel?> GetCinemaRoomPagination(int movieId, DateTime? showDate,
         int pageNo = 1, int pageSize = 5);
 
     Task ClearBookingList();

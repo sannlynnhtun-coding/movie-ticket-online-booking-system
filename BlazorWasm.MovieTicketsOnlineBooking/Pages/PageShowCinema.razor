@@ -1,96 +1,131 @@
-﻿@page "/cinema/{MovieId:int}"
+@page "/cinema/{MovieId:int}"
 @inject NavigationManager NavManager
 
-<div class="cx-fadein" style="padding-top:80px;max-width:960px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:48px;">
+<div class="cx-fadein" style="padding-top:80px;max-width:1000px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:48px;">
     @if (_isLoading)
     {
         <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;flex-direction:column;gap:16px;">
-            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <div class="h-10 w-10 border-4 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
             <p style="color:var(--fg-muted);font-weight:500;">Loading Cinemas...</p>
         </div>
     }
     else
     {
-        <!-- Title -->
-    <div style="margin:32px 0 24px;">
-        <h2 class="cx-section-title">Select Cinema &amp; Room</h2>
-        <p class="cx-section-subtitle">Choose your preferred cinema and show room below.</p>
-    </div>
+        <div style="margin:32px 0 24px;">
+            <h2 class="cx-section-title">Select Cinema, Hall and Showtime</h2>
+            <p class="cx-section-subtitle">Flow: Cinema -> Hall -> Showtime -> Seats</p>
+        </div>
 
-    @if (CinemaRoomData is not null)
-    {
-        <div style="display:flex;flex-direction:column;gap:16px;">
-            @foreach (var item in CinemaRoomData.CinemaAndRoomData)
-            {
-                <div class="cx-card" style="padding:20px;">
-                    <!-- Cinema header -->
-                    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
-                        <div style="width:44px;height:44px;background:rgba(14,165,233,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                                <polyline points="9 22 9 12 15 12 15 22"/>
-                            </svg>
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-weight:700;font-size:16px;color:var(--fg);">@item.Cinema.CinemaName</div>
-                            <div style="display:flex;align-items:center;gap:4px;margin-top:4px;color:var(--fg-muted);font-size:12px;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        @if (AvailableDates.Count > 0)
+        {
+            <div style="display:flex;align-items:center;gap:12px;background:var(--bg-muted);padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:20px;">
+                <span style="font-weight:600;font-size:14px;color:var(--fg);padding-left:8px;">Show Date</span>
+                <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;max-width:100%;">
+                    @foreach (var date in AvailableDates)
+                    {
+                        var isActive = SelectedDate.HasValue && date.Date == SelectedDate.Value.Date;
+                        <button class="cx-date-chip @(isActive ? "active" : "")" @onclick="() => SelectDate(date)">
+                            @date.ToString("ddd, dd MMM")
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (CinemaRoomData.Count == 0)
+        {
+            <div class="cx-card" style="padding:24px;">No halls/showtimes for selected date.</div>
+        }
+        else
+        {
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                @foreach (var item in CinemaRoomData)
+                {
+                    <div class="cx-card" style="padding:20px;">
+                        <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
+                            <div style="width:44px;height:44px;background:rgba(14,165,233,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                    <polyline points="9 22 9 12 15 12 15 22"/>
                                 </svg>
-                                @item.Cinema.CinemaName
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight:700;font-size:16px;color:var(--fg);">@item.Cinema.CinemaName</div>
                             </div>
                         </div>
+                        <div class="cx-divider"></div>
+                        <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;">
+                            @foreach (var room in item.RoomList)
+                            {
+                                var shows = GetShowsForRoom(room.CinemaId, room.RoomId);
+                                if (shows.Count == 0) { continue; }
+                                <div style="border:1px solid var(--border);border-radius:10px;padding:12px;">
+                                    <div style="font-weight:700;font-size:14px;margin-bottom:8px;">@room.RoomName</div>
+                                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                                        @foreach (var show in shows)
+                                        {
+                                            <button class="cx-date-chip" @onclick="() => SendRoomData(room, show.ShowId)">
+                                                @show.ShowDateTime.ToString("h:mm tt")
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     </div>
-                    <div class="cx-divider"></div>
-                    <!-- Room chips -->
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
-                        @foreach (var room in item.RoomList)
-                        {
-                            <button class="cx-btn cx-btn-ghost" style="font-size:13px;padding:8px 18px;"
-                                    @onclick="() => SendRoomData(room)">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>
-                                </svg>
-                                @room.RoomName
-                            </button>
-                        }
-                    </div>
-                </div>
-            }
-        </div>
-
-        <div style="display:flex;justify-content:center;margin-top:28px;">
-            <MudPagination Size="Size.Medium" Variant="Variant.Filled" Color="Color.Primary"
-                           SelectedChanged="PageChanged"
-                           Count="@CinemaRoomData.TotalPage" Class="my-4" />
-        </div>
-    }
+                }
+            </div>
+        }
     }
 </div>
 
 @code {
-    [Parameter]
-    public int MovieId { get; set; }
+    [Parameter] public int MovieId { get; set; }
 
-    private CinemaRoomPaginationModel? CinemaRoomData { get; set; }
+    private List<CinemaRoomModel> CinemaRoomData { get; set; } = new();
+    private List<DateTime> AvailableDates { get; set; } = new();
+    private DateTime? SelectedDate { get; set; }
+    private Dictionary<string, List<MovieScheduleViewModel>> _roomShows = new();
     private bool _isLoading = true;
 
     protected override async Task OnParametersSetAsync()
     {
         _isLoading = true;
-        CinemaRoomData = await _dbService.GetCinemaRoomPagination(MovieId);
+        AvailableDates = await _dbService.GetMovieAvailableDates(MovieId);
+        SelectedDate = AvailableDates.Count > 0 ? AvailableDates[0] : null;
+        await LoadData();
         _isLoading = false;
     }
 
-    private async Task PageChanged(int pageNo)
+    private async Task SelectDate(DateTime date)
     {
         _isLoading = true;
-        CinemaRoomData = await _dbService.GetCinemaRoomPagination(MovieId, pageNo);
+        SelectedDate = date.Date;
+        await LoadData();
         _isLoading = false;
     }
 
-    private void SendRoomData(CinemaRoomViewModel model)
+    private async Task LoadData()
     {
-        NavManager.NavigateTo($"/seat/{model.RoomId}/{model.CinemaId}/{MovieId}");
+        CinemaRoomData = await _dbService.GetCinemaAndRoom(MovieId, SelectedDate) ?? new();
+        _roomShows = new();
+        foreach (var c in CinemaRoomData)
+        {
+            foreach (var r in c.RoomList)
+            {
+                var shows = await _dbService.GetRoomShowSchedules(r.RoomId, r.CinemaId, MovieId, SelectedDate);
+                _roomShows[$"{r.CinemaId}:{r.RoomId}"] = shows;
+            }
+        }
+    }
+
+    private List<MovieScheduleViewModel> GetShowsForRoom(int cinemaId, int roomId)
+    {
+        return _roomShows.TryGetValue($"{cinemaId}:{roomId}", out var shows) ? shows : new();
+    }
+
+    private void SendRoomData(CinemaRoomViewModel room, int showId)
+    {
+        NavManager.NavigateTo($"/seat/{room.RoomId}/{room.CinemaId}/{MovieId}/{showId}");
     }
 }

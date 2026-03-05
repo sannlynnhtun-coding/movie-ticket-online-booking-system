@@ -5,7 +5,7 @@
     @if (_isLoading)
     {
         <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;flex-direction:column;gap:16px;">
-            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <div class="h-10 w-10 border-4 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
             <p style="color:var(--fg-muted);font-weight:500;">Loading Movies...</p>
         </div>
     }
@@ -89,9 +89,16 @@
         @if (_movieLst is not null && _movieLst.Count > 0)
         {
             <div style="display:flex;justify-content:center;margin-top:32px;">
-                <MudPagination Size="Size.Medium" Variant="Variant.Filled" Color="Color.Primary"
-                               SelectedChanged="PageChanged"
-                               Count="@_pageCount" Class="my-4" />
+                <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+                    <button class="cx-btn cx-btn-ghost" disabled="@(_currentPage <= 1)" @onclick="() => PageChanged(_currentPage - 1)">Prev</button>
+                    @for (int i = 1; i <= _pageCount; i++)
+                    {
+                        var p = i;
+                        var active = p == _currentPage;
+                        <button class="cx-btn @(active ? "cx-btn-primary" : "cx-btn-ghost")" @onclick="() => PageChanged(p)">@p</button>
+                    }
+                    <button class="cx-btn cx-btn-ghost" disabled="@(_currentPage >= _pageCount)" @onclick="() => PageChanged(_currentPage + 1)">Next</button>
+                </div>
             </div>
         }
     </div>

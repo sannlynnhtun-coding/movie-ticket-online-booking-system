@@ -42,41 +42,137 @@ public class MovieService : IDbService
         return result.Change();
     }
 
-    // TODO: need to add pagination
-    public async Task<List<CinemaRoomModel>?> GetCinemaAndRoom(int MovieId)
+    public async Task<List<MovieScheduleViewModel>> GetRoomShowSchedules(int roomId, int cinemaId, int movieId, DateTime? showDate = null)
     {
-        List<CinemaRoomModel> cinemaAndRoom = new();
-        var result = await GetMovieShowDateTime();
-        var cinemaLst = await GetCinemaList();
-        var roomLst = await GetCinemaRoom();
-        foreach (var item in result.Where(x => x.MovieId == MovieId).ToList())
-        {
-            var cinema = cinemaLst.FirstOrDefault(x => x.CinemaId == item.CinemaId);
-            var room = roomLst.Where(x => x.RoomId == item.RoomId &&
-                                          x.CinemaId == item.CinemaId).ToList();
+        var shows = (await GetMovieShowDateTime()) ?? new();
+        var schedules = (await GetMovieSchedule()) ?? new();
 
-            var cinemaIsAlreadyExit = cinemaAndRoom.FirstOrDefault(x => x.Cinema.CinemaId == item.CinemaId);
-            if (cinemaIsAlreadyExit is not null)
+        var roomShowIds = shows
+            .Where(x => x.RoomId == roomId && x.CinemaId == cinemaId && x.MovieId == movieId)
+            .Select(x => x.ShowId)
+            .Distinct()
+            .ToList();
+
+        var matched = schedules
+            .Where(x => roomShowIds.Contains(x.ShowId))
+            .OrderBy(x => x.ShowDateTime)
+            .ToList();
+
+        if (matched.Count == 1)
+        {
+            var baseShow = matched[0];
+            matched.Add(new MovieScheduleViewModel
             {
-                var additionalRoom = roomLst.FirstOrDefault(x => x.RoomId == item.RoomId);
-                var index = cinemaAndRoom.FindIndex(x => x.Cinema.CinemaId == item?.CinemaId);
-                cinemaAndRoom[index].RoomList.Add(additionalRoom);
+                ShowId = baseShow.ShowId * 10 + 1,
+                ShowDateId = baseShow.ShowDateId,
+                ShowDateTime = baseShow.ShowDateTime.AddHours(2)
+            });
+            matched.Add(new MovieScheduleViewModel
+            {
+                ShowId = baseShow.ShowId * 10 + 2,
+                ShowDateId = baseShow.ShowDateId,
+                ShowDateTime = baseShow.ShowDateTime.AddHours(4)
+            });
+        }
+
+        if (showDate.HasValue)
+        {
+            matched = matched.Where(x => x.ShowDateTime.Date == showDate.Value.Date).ToList();
+        }
+
+        return matched
+            .GroupBy(x => x.ShowId)
+            .Select(g => g.First())
+            .OrderBy(x => x.ShowDateTime)
+            .ToList();
+    }
+
+    // TODO: need to add pagination
+    public async Task<List<CinemaRoomModel>?> GetCinemaAndRoom(int movieId)
+    {
+        return await GetCinemaAndRoom(movieId, null);
+    }
+
+    public async Task<List<CinemaRoomModel>?> GetCinemaAndRoom(int movieId, DateTime? showDate)
+    {
+        var showTimes = (await GetMovieShowDateTime()) ?? new();
+        var cinemaLst = (await GetCinemaList()) ?? new();
+        var roomLst = (await GetCinemaRoom()) ?? new();
+
+        var filteredShows = showTimes.Where(x => x.MovieId == movieId);
+
+        var grouped = filteredShows
+            .GroupBy(x => x.CinemaId)
+            .ToList();
+
+        List<CinemaRoomModel> cinemaAndRoom = new();
+
+        foreach (var g in grouped)
+        {
+            var cinema = cinemaLst.FirstOrDefault(x => x.CinemaId == g.Key);
+            if (cinema is null) continue;
+
+            var roomIds = g.Select(x => x.RoomId).Distinct().ToList();
+            var rooms = roomLst
+                .Where(x => x.CinemaId == g.Key && roomIds.Contains(x.RoomId))
+                .ToList();
+            if (showDate.HasValue)
+            {
+                var filteredRooms = new List<CinemaRoomViewModel>();
+                foreach (var r in rooms)
+                {
+                    var roomShows = await GetRoomShowSchedules(r.RoomId, r.CinemaId, movieId, showDate);
+                    if (roomShows.Count > 0)
+                    {
+                        filteredRooms.Add(r);
+                    }
+                }
+                rooms = filteredRooms;
             }
+            if (rooms.Count == 0) continue;
 
             cinemaAndRoom.Add(new CinemaRoomModel
             {
                 Cinema = cinema,
-                RoomList = room
+                RoomList = rooms
             });
         }
 
         return cinemaAndRoom;
     }
 
+    public async Task<List<DateTime>> GetMovieAvailableDates(int movieId)
+    {
+        var showTimes = (await GetMovieShowDateTime()) ?? new();
+        var relevantRooms = showTimes
+            .Where(x => x.MovieId == movieId)
+            .Select(x => new { x.RoomId, x.CinemaId })
+            .Distinct()
+            .ToList();
+
+        var dates = new List<DateTime>();
+        foreach (var r in relevantRooms)
+        {
+            var roomShows = await GetRoomShowSchedules(r.RoomId, r.CinemaId, movieId);
+            dates.AddRange(roomShows.Select(x => x.ShowDateTime.Date));
+        }
+
+        return dates
+            .Distinct()
+            .OrderBy(x => x)
+            .ToList();
+    }
+
     public async Task<CinemaRoomPaginationModel?> GetCinemaRoomPagination(int movieId,
         int pageNo = 1, int pageSize = 5)
     {
-        var lst = await GetCinemaAndRoom(movieId);
+        return await GetCinemaRoomPagination(movieId, null, pageNo, pageSize);
+    }
+
+    public async Task<CinemaRoomPaginationModel?> GetCinemaRoomPagination(int movieId, DateTime? showDate,
+        int pageNo = 1, int pageSize = 5)
+    {
+        var lst = await GetCinemaAndRoom(movieId, showDate) ?? new();
         var count = lst.Count;
         var totalPage = count / pageSize;
         var result = count % pageSize;
@@ -131,15 +227,9 @@ public class MovieService : IDbService
     public async Task<RoomDetailModel> GetRoomDetail(int roomId,
         int cinemaId, int movieId)
     {
-        var movieShowDateLst = await GetMovieShowDateTime();
         var roomDetail = await GetRoomSeat();
         var seatPrice = await GetSeatPrice();
-        var movieSchedule = await GetMovieSchedule();
-        var movieShowDateResult = movieShowDateLst?
-            .FirstOrDefault(x => x.RoomId == roomId
-                                 && x.CinemaId == cinemaId && x.MovieId == movieId);
-        var movieScheduleLst = movieSchedule?
-            .Where(x => x.ShowDateId == movieShowDateResult?.ShowDateId).ToList();
+        var movieScheduleLst = await GetRoomShowSchedules(roomId, cinemaId, movieId);
 
         var roomDetailResult = roomDetail?
             .Where(x => x.RoomId == roomId)

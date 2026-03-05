@@ -13,6 +13,7 @@ public partial class PageMoviesCard
 
     private int _pageCount = 0;
     private int _pageSize = 3;
+    private int _currentPage = 1;
     private bool _isLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -21,6 +22,7 @@ public partial class PageMoviesCard
         _movieModel = await _dbService.GetMovieListByPagination(1, 3);
         _movieLst = _movieModel.MovieList;
         _pageCount = _movieModel.getTotalPages(_pageSize);
+        _currentPage = 1;
         _isLoading = false;
     }
     async Task SearchMovie(int pageNo = 1)
@@ -35,6 +37,7 @@ public partial class PageMoviesCard
     async Task PageChanged(int pageNo = 1)
     {
         _isLoading = true;
+        _currentPage = pageNo;
         if (string.IsNullOrWhiteSpace(title))
         {
             _movieModel = await _dbService.GetMovieListByPagination(pageNo, 3);
