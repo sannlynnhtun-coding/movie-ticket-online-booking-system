@@ -33,9 +33,9 @@ else if (_roomDetail is not null)
                     {
                         @foreach (var item in _roomDetail.ShowDate)
                         {
-                            var isActive = item.ShowDateTime == ShowDate;
+                            var isActive = item.ShowDateId == ShowDateId;
                             <button class="cx-date-chip @(isActive ? "active" : "")"
-                                    @onclick="() => SelectedShowDate(item.ShowDateTime)">
+                                    @onclick="() => SelectedShowDate(item)">
                                 @item.ShowDateTime.ToString("h:mm tt")
                             </button>
                         }

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.Data.SqlTypes;
-using Blazored.LocalStorage;
 using BlazorWasm.MovieTicketsOnlineBooking.Models;
 using BlazorWasm.MovieTicketsOnlineBooking.Models.DataModels;
 using BlazorWasm.MovieTicketsOnlineBooking.Models.ViewModels;
@@ -9,11 +8,11 @@ namespace BlazorWasm.MovieTicketsOnlineBooking.Services;
 
 public class MovieService : IDbService
 {
-    private readonly ILocalStorageService _localStorage;
+    private readonly IBrowserStoreService _browserStore;
 
-    public MovieService(ILocalStorageService localStorage)
+    public MovieService(IBrowserStoreService browserStore)
     {
-        _localStorage = localStorage;
+        _browserStore = browserStore;
     }
 
     // TODO: need to add pagination
@@ -171,7 +170,7 @@ public class MovieService : IDbService
         return result;
     }
 
-    public async Task SetBookingList(RoomSeatViewModel model, DateTime date)
+    public async Task SetBookingList(RoomSeatViewModel model, int roomId, int cinemaId, int movieId, int showDateId, DateTime showDateTime)
     {
         var seatData = await GetSeatPrice();
         var getSeatPrice = seatData?.FirstOrDefault(x => x.RowName == model.RowName
@@ -179,27 +178,28 @@ public class MovieService : IDbService
         var data = new BookingModel
         {
             BookingId = Guid.NewGuid(),
-            RoomId = model.RoomId,
+            RoomId = roomId,
+            CinemaId = cinemaId,
+            MovieId = movieId,
+            ShowDateId = showDateId,
             SeatId = model.SeatId,
             SeatNo = model.SeatNo,
-            ShowDate = date,
+            ShowDate = showDateTime,
             RowName = model.RowName,
             SeatType = model.SeatType,
             SeatPrice = getSeatPrice?.SeatPrice ?? 0
         };
-        var dataList = await GetBookingList();
-        dataList?.Add(data);
-        await _localStorage.SetItemAsync("Tbl_Booking", dataList);
+        await _browserStore.SaveBookingDraftAsync(data);
     }
 
-    public async Task SetBookingVoucher()
+    public async Task SetBookingVoucher(int roomId, int cinemaId, int movieId, int showDateId)
     {
         var bookingVoucherHeadId = Guid.NewGuid();
 
         BookingVoucherHeadDataModel headModel = new();
         DateTime bookingDate = DateTime.Now;
 
-        var getLst = await GetBookingList();
+        var getLst = await GetBookingList(roomId, cinemaId, movieId, showDateId);
         getLst ??= new();
 
         var buildingLst = await GetCinemaList();
@@ -215,16 +215,15 @@ public class MovieService : IDbService
                 var cinema = buildingLst.FirstOrDefault(c => c.CinemaId == room?.CinemaId);
                 var buildingName = cinema?.CinemaName ?? "";
 
-                var showDateTime = await GetMovieShowDateTime();
-                var getMovieId = showDateTime.FirstOrDefault(x => x.RoomId == item.RoomId);
                 var movieData = await GetMovieList();
-                var movie = movieData.FirstOrDefault(m => m.MovieId == getMovieId.MovieId);
+                var movie = movieData.FirstOrDefault(m => m.MovieId == item.MovieId);
 
                 BookingVoucherDetailDataModel detail = new()
                 {
                     BookingVoucherDetailId = Guid.NewGuid(),
                     SeatId = item.SeatId,
                     Seat = item.RowName + item.SeatNo,
+                    ShowDateId = item.ShowDateId,
                     ShowDate = item.ShowDate,
                     SeatPrice = item.SeatPrice,
                     RoomName = roomName,
@@ -240,47 +239,37 @@ public class MovieService : IDbService
             headModel.BookingDate = bookingDate;
             headModel.BookingVoucherNo = Guid.NewGuid();
             await SetBookingVoucherHead(headModel);
-            await _localStorage.RemoveItemAsync("Tbl_Booking");
+            await ClearBookingList(roomId, cinemaId, movieId, showDateId);
         }
     }
 
     public async Task<List<BookingVoucherHeadDataModel>> GetBookingVoucherHead()
     {
-        var lst = await _localStorage.GetItemAsync<List<BookingVoucherHeadDataModel>>("Tbl_BookingVoucherHead");
+        var lst = await _browserStore.GetVoucherHeadsAsync();
         lst ??= new List<BookingVoucherHeadDataModel>();
         return lst;
     }
 
-    public async Task DeleteBookingSeat(int seatId)
+    public async Task DeleteBookingSeat(int seatId, int roomId, int cinemaId, int movieId, int showDateId)
     {
-        var lst = await GetBookingList();
-        var result = lst?.FirstOrDefault(x => x.SeatId == seatId);
-        if (result == null) return;
-        lst?.Remove(result);
-        await _localStorage.SetItemAsync("Tbl_Booking", lst);
+        await _browserStore.DeleteBookingDraftBySeatAsync(GetScopeKey(roomId, cinemaId, movieId, showDateId), seatId);
     }
 
     public async Task<List<BookingVoucherDetailViewModel>> GetBookingVoucherDetail()
     {
-        var lst = await _localStorage.GetItemAsync<List<BookingVoucherDetailDataModel>>("Tbl_BookingVoucherDetail");
+        var lst = await _browserStore.GetVoucherDetailsAsync();
         lst ??= new List<BookingVoucherDetailDataModel>();
         return lst.Change();
     }
 
     private async Task SetBookingVoucherDetail(BookingVoucherDetailDataModel model)
     {
-        var lst = await _localStorage.GetItemAsync<List<BookingVoucherDetailDataModel>>("Tbl_BookingVoucherDetail");
-        lst ??= new List<BookingVoucherDetailDataModel>();
-        lst.Add(model);
-        await _localStorage.SetItemAsync("Tbl_BookingVoucherDetail", lst);
+        await _browserStore.SaveVoucherDetailAsync(model);
     }
 
     private async Task SetBookingVoucherHead(BookingVoucherHeadDataModel model)
     {
-        var lst = await _localStorage.GetItemAsync<List<BookingVoucherHeadDataModel>>("Tbl_BookingVoucherHead");
-        lst ??= new List<BookingVoucherHeadDataModel>();
-        lst.Add(model);
-        await _localStorage.SetItemAsync("Tbl_BookingVoucherHead", lst);
+        await _browserStore.SaveVoucherHeadAsync(model);
     }
 
     public async Task<MovieSearchModel> SearchMovie(string title, int pageNo = 1,
@@ -316,14 +305,24 @@ public class MovieService : IDbService
 
     public async Task ClearBookingList()
     {
-        await _localStorage.RemoveItemAsync("Tbl_Booking");
+        await _browserStore.ClearAllBookingDraftsAsync();
     }
 
-    public async Task<List<BookingModel>?> GetBookingList()
+    public async Task ClearBookingList(int roomId, int cinemaId, int movieId, int showDateId)
     {
-        var dataLst = await _localStorage.GetItemAsync<List<BookingModel>?>("Tbl_Booking");
+        await _browserStore.ClearBookingDraftsByScopeAsync(GetScopeKey(roomId, cinemaId, movieId, showDateId));
+    }
+
+    public async Task<List<BookingModel>?> GetBookingList(int roomId, int cinemaId, int movieId, int showDateId)
+    {
+        var dataLst = await _browserStore.GetBookingDraftsByScopeAsync(GetScopeKey(roomId, cinemaId, movieId, showDateId));
         dataLst ??= new();
         return dataLst;
+    }
+
+    private static string GetScopeKey(int roomId, int cinemaId, int movieId, int showDateId)
+    {
+        return $"{roomId}:{cinemaId}:{movieId}:{showDateId}";
     }
 
     public async Task<List<RoomSeatViewModel>?> GetRoomSeat()

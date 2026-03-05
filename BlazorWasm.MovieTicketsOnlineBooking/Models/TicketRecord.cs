@@ -10,6 +10,7 @@ public class TicketRecord
     public int SeatId { get; set; }
     public string Seat { get; set; } = string.Empty;
     public int SeatPrice { get; set; }
+    public int ShowDateId { get; set; }
     public DateTime ShowDate { get; set; }
     public DateTime BookingDate { get; set; }
 }
