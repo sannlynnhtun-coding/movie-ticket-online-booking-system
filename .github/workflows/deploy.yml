@@ -1,0 +1,50 @@
+name: Deploy Blazor Wasm to Vercel
+
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+# Ensure only one deployment runs at a time to avoid conflicts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Pull the latest code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Initialize .NET Environment
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # 3. Handle Dependencies and Build
+      - name: Restore & Build
+        run: |
+          dotnet restore
+          dotnet build --configuration Release --no-restore
+
+      # 4. Compile the Wasm Project for Production
+      - name: Publish WasmApp
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: dotnet publish BlazorWasm.MovieTicketsOnlineBooking/BlazorWasm.MovieTicketsOnlineBooking.csproj -c Release -o release
+
+      # 5. Push to Vercel
+      - name: Deploy to Vercel
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./release/wwwroot # Vercel needs the static assets folder
