@@ -1,95 +1,113 @@
-﻿@page "/movie-card"
-@inject PageChangeStateContainer StateContainer
-@* @implements IDisposable *@
+﻿@page "/"
+@inject NavigationManager NavManager
 
-<PageBanner />
-<!-- ==========Ticket-Search========== -->
-<section class="search-ticket-section padding-top pt-lg-0">
-    <div class="container">
-        <div class="search-tab bg_img" data-background="./theme/images/ticket/ticket-bg01.jpg">
-            <div class="row align-items-center mb--20">
-                <div class="col-lg-6 mb-20">
-                    <div class="search-ticket-header">
-                        <h6 class="category">welcome to Boleto </h6>
-                        <h3 class="title">what are you looking for</h3>
-                    </div>
-                </div>
+<div class="cx-fadein" style="padding-top:80px;">
+    @if (_isLoading)
+    {
+        <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;flex-direction:column;gap:16px;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <p style="color:var(--fg-muted);font-weight:500;">Loading Movies...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Hero Banner -->
+    <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#0f172a 100%);padding:48px 24px;text-align:center;margin-bottom:0;">
+        <div style="max-width:640px;margin:0 auto;">
+            <span class="cx-badge cx-badge-accent" style="margin-bottom:14px;display:inline-flex;">🎬 Now Showing</span>
+            <h1 style="font-size:clamp(28px,5vw,48px);font-weight:900;letter-spacing:-0.03em;color:#f1f5f9;margin-bottom:12px;line-height:1.1;">
+                Discover &amp; Book<br/>
+                <span style="background:linear-gradient(135deg,#38bdf8,#0ea5e9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Your Movie Tickets</span>
+            </h1>
+            <p style="color:#94a3b8;font-size:15px;margin-bottom:28px;">Browse the latest blockbusters and secure your seat in seconds.</p>
+            <!-- Search bar -->
+            <div style="display:flex;gap:8px;max-width:480px;margin:0 auto;">
+                <input class="cx-input" type="text"
+                       @bind-value="@_title"
+                       @bind-value:event="oninput"
+                       @onkeyup="HandleKeyUp"
+                       placeholder="Search for movies…"
+                       style="flex:1;" />
+                <button class="cx-btn cx-btn-primary" @onclick="() => SearchMovie()" style="white-space:nowrap;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    Search
+                </button>
             </div>
-            <div class="tab-area">
-                <div class="tab-item active">
-                    <form class="ticket-search-form">
-                        <div class="form-group large">
-                            <input type="text"
-                                   @bind-value="@title"
-                                   placeholder="Search for Movies">
-                            <button type="button" @onclick="()=>SearchMovie()">
-                                <i class="fas fa-search"></i>
+        </div>
+    </div>
+
+    <!-- Movies Grid -->
+    <div style="max-width:1200px;margin:0 auto;padding:32px 24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+            <div>
+                <h2 class="cx-section-title">Movies</h2>
+                <p class="cx-section-subtitle">@(_movieLst?.Count ?? 0) titles available</p>
+            </div>
+        </div>
+
+        @if (_movieLst is { Count: > 0 })
+        {
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;">
+                @foreach (var movie in _movieLst)
+                {
+                    var image = $"/movie-cover/{movie.MoviePhoto}";
+                    <div class="cx-movie-card" @onclick="() => MovieData(movie)">
+                        <img class="cx-movie-poster" src="@image" alt="@movie.MovieTitle" loading="lazy"
+                             style="border-radius:14px 14px 0 0;" />
+                        <div class="cx-movie-body">
+                            <div class="cx-movie-title" title="@movie.MovieTitle">@movie.MovieTitle</div>
+                            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
+                                <span class="cx-badge cx-badge-muted">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:3px;">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                    @movie.ReleaseDate.ToString("MMM yyyy")
+                                </span>
+                                <span class="cx-badge cx-badge-accent">@movie.Duration hr</span>
+                            </div>
+                            <button class="cx-btn cx-btn-primary" style="width:100%;font-size:12px;padding:7px 12px;">
+                                Book Now
                             </button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                }
             </div>
-        </div>
-    </div>
-</section>
-<!-- ==========Ticket-Search========== -->
+        }
+        else
+        {
+            <div style="text-align:center;padding:80px 24px;color:var(--fg-muted);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 16px;display:block;opacity:0.4;">
+                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>
+                </svg>
+                <p style="font-size:16px;font-weight:500;">No movies found</p>
+                <p style="font-size:13px;margin-top:4px;">Try adjusting your search term</p>
+            </div>
+        }
 
-<section class="movie-section padding-top padding-bottom bg-two">
-    <div class="container">
-        <div class="row flex-wrap-reverse justify-content-center">
-            <div class="col-lg-9">
-                <div class="article-section padding-bottom">
-                    <div class="section-header-1">
-                        <h2 class="title">movies</h2>
-                        <a class="view-all" href="javascript:void(0);">View All</a>
-                    </div>
-                    <div class="row mb-30-none justify-content-start">
-                        @if (_movieLst is { Count: > 0 })
-                        {
-                            foreach (var movie in _movieLst)
-                            {
-                                var image = $"/movie-cover/{@movie.MoviePhoto}";
-                                <div class="col-sm-6 col-lg-4">
-                                    <div class="movie-grid">
-                                        <div class="movie-thumb c-thumb">
-                                            <a href="javascript:void(0);" @onclick="()=>MovieData(movie)">
-                                                <img src="@image" style="height:400px;" alt="movie">
-                                            </a>
-                                        </div>
-                                        <div class="movie-content bg-one">
-                                            <h5 class="title m-0">
-                                                <a href="#0">@movie.MovieTitle</a>
-                                            </h5>
-                                            <ul class="mb-2">
-                                                <li>
-                                                    <span class="content">Release Date - @(movie.ReleaseDate.ToString("MMM-dd-yyyy"))</span>
-                                                </li>
-                                                <li>
-                                                    <span class="content">Duration - @(movie.Duration) Hr</span>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="col-sm-6 col-lg-4">
-                                <p>Movie Not Found</p>
-                            </div>
-                        }
-                    </div>
-                    @if (_movieLst is not null && _movieLst.Count > 0)
-                    {
-                        <div class="d-flex flex-column align-center">
-                            <MudPagination Size="Size.Medium" Variant="Variant.Filled" Color="Color.Primary"
-                                           SelectedChanged="PageChanged"
-                                           Count="@_pageCount" Class="my-4" />
-                        </div>
-                    }
-                </div>
+        @if (_movieLst is not null && _movieLst.Count > 0)
+        {
+            <div style="display:flex;justify-content:center;margin-top:32px;">
+                <MudPagination Size="Size.Medium" Variant="Variant.Filled" Color="Color.Primary"
+                               SelectedChanged="PageChanged"
+                               Count="@_pageCount" Class="my-4" />
             </div>
-        </div>
+        }
     </div>
-</section>
+    }
+</div>
+
+@code {
+    private string? _title;
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SearchMovie();
+    }
+
+    private void MovieData(BlazorWasm.MovieTicketsOnlineBooking.Models.ViewModels.MovieViewModel model)
+    {
+        NavManager.NavigateTo($"/cinema/{model.MovieId}");
+    }
+}

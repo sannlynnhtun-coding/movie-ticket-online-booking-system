@@ -13,20 +13,15 @@ public partial class PageMoviesCard
 
     private int _pageCount = 0;
     private int _pageSize = 3;
-
-    [Parameter] public EventCallback<MovieViewModel?> ShowCinema { get; set; }
+    private bool _isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
+        _isLoading = true;
         _movieModel = await _dbService.GetMovieListByPagination(1, 3);
         _movieLst = _movieModel.MovieList;
         _pageCount = _movieModel.getTotalPages(_pageSize);
-    }
-
-    private async Task MovieData(MovieViewModel model)
-    {
-        StateContainer.CurrentPage = PageChangeEnum.PageCinema;
-        await ShowCinema.InvokeAsync(model);
+        _isLoading = false;
     }
     async Task SearchMovie(int pageNo = 1)
     {
@@ -39,6 +34,7 @@ public partial class PageMoviesCard
     }
     async Task PageChanged(int pageNo = 1)
     {
+        _isLoading = true;
         if (string.IsNullOrWhiteSpace(title))
         {
             _movieModel = await _dbService.GetMovieListByPagination(pageNo, 3);
@@ -49,5 +45,6 @@ public partial class PageMoviesCard
         {
             await SearchMovie(pageNo);
         }
+        _isLoading = false;
     }
 }

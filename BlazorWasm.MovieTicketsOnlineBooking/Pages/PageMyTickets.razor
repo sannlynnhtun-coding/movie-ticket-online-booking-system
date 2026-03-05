@@ -1,0 +1,126 @@
+@page "/my-tickets"
+@inject NavigationManager NavManager
+@inject ITicketStoreService TicketStore
+@inject ISnackbar Snackbar
+
+<div class="cx-fadein" style="padding-top:80px;max-width:800px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:48px;">
+    @if (_isLoading)
+    {
+        <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;flex-direction:column;gap:16px;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <p style="color:var(--fg-muted);font-weight:500;">Loading Tickets...</p>
+        </div>
+    }
+    else
+    {
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+        <h2 class="cx-section-title">My Tickets</h2>
+        @if (_tickets is { Count: > 0 })
+        {
+            <button class="cx-btn cx-btn-ghost" style="color:#ef4444;border-color:rgba(239,68,68,0.2);" @onclick="ClearAllTickets">
+                Clear All
+            </button>
+        }
+    </div>
+
+    @if (_tickets is null)
+    {
+        <div style="text-align:center;padding:40px;color:var(--fg-muted);">Loading tickets…</div>
+    }
+    else if (_tickets.Count == 0)
+    {
+        <div class="cx-card" style="text-align:center;padding:60px 24px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 16px;opacity:0.3;">
+                <path d="M21.5 12H16"/><path d="M2.5 12H8"/><path d="M12 2.5V8"/><path d="M12 16v5.5"/><rect x="8" y="8" width="8" height="8" rx="2"/>
+            </svg>
+            <h3 style="font-size:18px;font-weight:600;color:var(--fg);margin-bottom:8px;">No tickets yet</h3>
+            <p style="color:var(--fg-muted);font-size:14px;margin-bottom:24px;">You haven't purchased any tickets. Browse movies and book your first seat!</p>
+            <button class="cx-btn cx-btn-primary" @onclick="GoToMovies">Browse Movies</button>
+        </div>
+    }
+    else
+    {
+        <div style="display:flex;flex-direction:column;gap:16px;">
+            @foreach (var t in _tickets.OrderByDescending(x => x.BookingDate))
+            {
+                <div class="cx-my-ticket-row">
+                    <!-- Icon -->
+                    <div style="width:48px;height:48px;border-radius:10px;background:rgba(14,165,233,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>
+                        </svg>
+                    </div>
+
+                    <!-- Details -->
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;font-size:15px;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            @t.MovieName
+                        </div>
+                        <div style="font-size:13px;color:var(--fg-muted);margin-top:4px;">
+                            @t.BuildingName • @t.RoomName
+                        </div>
+                        <div style="font-size:12px;color:var(--fg-muted);margin-top:2px;">
+                            Show: <strong style="color:var(--fg);">@t.ShowDate.ToString("dd MMM, h:mm tt")</strong>
+                        </div>
+                    </div>
+
+                    <!-- Seat & Price -->
+                    <div style="text-align:right;">
+                        <div style="font-weight:700;font-size:14px;color:var(--accent);margin-bottom:2px;">
+                            Seat @t.Seat
+                        </div>
+                        <div style="font-size:12px;color:var(--fg-muted);">
+                            @t.SeatPrice.ToString("C0")
+                        </div>
+                    </div>
+
+                    <!-- Delete Single Ticket -->
+                    <button class="cx-btn cx-btn-ghost" style="padding:6px;min-width:0;height:36px;width:36px;border-color:transparent;color:var(--fg-muted);" title="Remove ticket"
+                            @onclick="() => DeleteTicket(t)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    }
+</div>
+
+@code {
+    private List<BlazorWasm.MovieTicketsOnlineBooking.Models.TicketRecord>? _tickets;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTickets();
+    }
+
+    private async Task LoadTickets()
+    {
+        _isLoading = true;
+        _tickets = await TicketStore.GetAllTicketsAsync();
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private void GoToMovies()
+    {
+        NavManager.NavigateTo("/");
+    }
+
+    private async Task DeleteTicket(BlazorWasm.MovieTicketsOnlineBooking.Models.TicketRecord record)
+    {
+        await TicketStore.DeleteTicketAsync(record.BookingVoucherDetailId);
+        Snackbar.Add($"Ticket for {record.MovieName} removed.", Severity.Info);
+        await LoadTickets();
+    }
+
+    private async Task ClearAllTickets()
+    {
+        await TicketStore.ClearAllTicketsAsync();
+        Snackbar.Add("All tickets cleared.", Severity.Info);
+        await LoadTickets();
+    }
+}

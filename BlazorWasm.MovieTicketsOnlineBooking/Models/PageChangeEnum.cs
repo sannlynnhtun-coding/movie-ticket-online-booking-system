@@ -5,6 +5,7 @@
         PageMovie,
         PageCinema,
         PageSeat,
-        PageBookingVoucher
+        PageBookingVoucher,
+        PageMyTickets
     }
 }

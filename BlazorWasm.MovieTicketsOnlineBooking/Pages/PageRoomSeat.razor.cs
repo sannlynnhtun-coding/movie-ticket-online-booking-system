@@ -8,48 +8,49 @@ namespace BlazorWasm.MovieTicketsOnlineBooking.Pages;
 
 public partial class PageRoomSeat
 {
-    [Parameter] public CinemaRoomViewModel? Data { get; set; }
-    [Parameter] public int MovideId { get; set; }
+    [Parameter] public int RoomId { get; set; }
+    [Parameter] public int CinemaId { get; set; }
+    [Parameter] public int MovieId { get; set; }
 
-    [Parameter] public EventCallback<MovieViewModel> ShowCinema { get; set; }
-
-    private List<BookingVoucherDetailViewModel> _voucherDetailLst { get; set; }
+    private bool _isLoading = true;
+    private List<BookingVoucherDetailViewModel> _voucherDetailLst { get; set; } = new();
 
     private RoomDetailModel? _roomDetail = null;
     private SeatNoModel? Seat = new();
     private DateTime ShowDate { get; set; }
-    private List<BookingModel>? _bookingData = new();
+    private List<BookingModel> _bookingData { get; set; } = new();
     private int seatId = 0;
-    private string? selectedSingle;
-    private string? selectedCouple;
-    private string? singleSeat = "seat01.png";
-    private string? coupleSeat = "seat02.png";
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        if (Data is not null)
+        _isLoading = true;
+        _roomDetail = await _dbService.GetRoomDetail(RoomId, CinemaId, MovieId);
+        
+        if (_roomDetail?.ShowDate != null && _roomDetail.ShowDate.Count > 0)
         {
-            _roomDetail = await _dbService.GetRoomDetail(Data.RoomId, Data.CinemaId, MovideId);
-            var parameters = new DialogParameters { { "_roomDetail", _roomDetail } };
-            var dialog = await DialogService.ShowAsync<MovieShowTimeDialog>("", parameters);
-
-            var result = await dialog.Result;
-            if (!result.Cancelled)
-            {
-                var showDateTime = result.Data is DateTime dateTime ? dateTime : default;
-                if (showDateTime != default)
-                    ShowDate = showDateTime;
-            }
+            ShowDate = _roomDetail.ShowDate[0].ShowDateTime;
         }
 
-        var voucherDetailLst = await _dbService.GetBookingVoucherDetail();
-        _voucherDetailLst = voucherDetailLst is not null ? voucherDetailLst : new();
+        await LoadBookedTicketsForDate();
+        _isLoading = false;
+    }
+
+    private async Task HandleSeatClick(RoomSeatViewModel seat)
+    {
+        var existing = _bookingData.FirstOrDefault(b => b.SeatId == seat.SeatId);
+        if (existing is not null)
+        {
+            await DeleteBookingSeat(seat.SeatId);
+        }
+        else
+        {
+            await ToBookingList(seat);
+        }
     }
 
     private async Task ToBookingList(RoomSeatViewModel model)
     {
-        var result = _bookingData
-            .FirstOrDefault(v => v.SeatId == model.SeatId);
+        var result = _bookingData.FirstOrDefault(v => v.SeatId == model.SeatId);
         if (result is not null) return;
 
         seatId = model.SeatId;
@@ -61,24 +62,40 @@ public partial class PageRoomSeat
         }
     }
 
-    private void SelectedShowDate(DateTime showDate)
+    private async Task SelectedShowDate(DateTime date)
     {
-        ShowDate = showDate;
+        ShowDate = date;
+        await LoadBookedTicketsForDate();
     }
 
-    private async Task SetBookingVoucher()
+    private async Task LoadBookedTicketsForDate()
     {
-        await _dbService.SetBookingVoucher();
-        _bookingData = await _dbService.GetBookingList();
-        StateContainer.CurrentPage = PageChangeEnum.PageBookingVoucher;
+        // 1. Get from "backend API" (mock DB)
+        var serverVouchers = await _dbService.GetBookingVoucherDetail() ?? new();
+        
+        // 2. Supplement with any offline-persisted ones for this specific show date/movie
+        var localTickets = await TicketStore.GetAllTicketsAsync() ?? new();
+        
+        // Combine them locally to mark seats as booked (red)
+        var matchedLocal = localTickets
+            .Where(t => t.ShowDate == ShowDate && (_roomDetail?.RoomSeatData?.Any(s => s.SeatId == t.SeatId) ?? false))
+            .Select(t => new BookingVoucherDetailViewModel 
+            { 
+                SeatId = t.SeatId, 
+                Seat = t.Seat 
+            });
+
+        _voucherDetailLst = serverVouchers.Concat(matchedLocal).GroupBy(x => x.SeatId).Select(g => g.First()).ToList();
     }
 
-    private async Task BackToCinemaRoom()
+    private void SetBookingVoucher()
     {
-        await _dbService.ClearBookingList();
-        StateContainer.CurrentPage = PageChangeEnum.PageCinema;
-        var model = await _dbService.GetMovieByRoomId(Data.RoomId);
-        await ShowCinema.InvokeAsync(model);
+        NavManager.NavigateTo("/voucher");
+    }
+
+    private void BackToCinemaRoom()
+    {
+        NavManager.NavigateTo($"/cinema/{MovieId}");
     }
 
     private async Task DeleteBookingSeat(int seatId)

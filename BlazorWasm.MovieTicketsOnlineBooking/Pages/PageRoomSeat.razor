@@ -1,210 +1,142 @@
-﻿@page "/room-seat/{Data}"
-@inject PageChangeStateContainer StateContainer
+﻿@page "/seat/{RoomId:int}/{CinemaId:int}/{MovieId:int}"
+@inject NavigationManager NavManager
 @inject IDialogService DialogService
-<!-- ==========Page-Title========== -->
-@if (Data is not null)
+@inject ISnackbar Snackbar
+
+@if (_isLoading)
 {
-    <section class="page-title bg-one" style="margin-top:11%;">
-        <div class="container">
-            <div class="page-title-area">
-                <div class="item md-order-1">
-                    <a href="javascript:void(0);"
-                       @onclick="BackToCinemaRoom"
-                       class="custom-button back-button">
-                        <i class="flaticon-double-right-arrows-angles"></i>back
-                    </a>
-                </div>
-                <div class="item date-item">
-                    @if (ShowDate != default)
+    <div style="display:flex;justify-content:center;align-items:center;min-height:70vh;flex-direction:column;gap:16px;">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+        <p style="color:var(--fg-muted);font-weight:500;">Loading Seat Map...</p>
+    </div>
+}
+else if (_roomDetail is not null)
+{
+    <div class="cx-fadein" style="padding-top:40px;max-width:1100px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;">
+        
+        <!-- Header -->
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-bottom:32px;">
+            <div>
+                <button class="cx-btn cx-btn-ghost" @onclick="BackToCinemaRoom">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back to Cinemas
+                </button>
+            </div>
+            
+            <div style="display:flex;align-items:center;gap:12px;background:var(--bg-muted);padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border);">
+                @if (ShowDate != default)
+                {
+                    <span style="font-weight:600;font-size:14px;color:var(--fg);padding-left:8px;">@ShowDate.ToString("ddd, dd MMM")</span>
+                }
+                <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;max-width:100%;">
+                    @if (_roomDetail?.ShowDate is not null)
                     {
-                        <span class="date">
-                            Show Time - @ShowDate.ToString("dd-MMM-yyyy (ddd) h:mm tt")
-                        </span>
-                    }
-                    <div class="nice-select select-bar" tabindex="0">
-                        <span class="current">@ShowDate.ToString("h:mm tt")</span>
-                        <ul class="list">
-                            @foreach (var item in _roomDetail?.ShowDate)
-                            {
-                                <li data-value="sc4" class="option"
+                        @foreach (var item in _roomDetail.ShowDate)
+                        {
+                            var isActive = item.ShowDateTime == ShowDate;
+                            <button class="cx-date-chip @(isActive ? "active" : "")"
                                     @onclick="() => SelectedShowDate(item.ShowDateTime)">
-                                    @item.ShowDateTime.ToString("h:mm tt")
-                                </li>
-                            }
-                        </ul>
-                    </div>
+                                @item.ShowDateTime.ToString("h:mm tt")
+                            </button>
+                        }
+                    }
                 </div>
             </div>
         </div>
-    </section>
-    <!-- ==========Page-Title========== -->
-    <!-- ==========Movie-Section========== -->
-    <div class="seat-plan-section padding-bottom padding-top">
-        <div class="container">
-            <div class="screen-area">
-                <h4 class="screen">screen</h4>
-                <div class="screen-thumb">
-                    <img src="/theme/images/movie/screen-thumb.png" alt="movie">
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:32px;">
+            <!-- Seat Map Area -->
+            <div class="cx-card" style="padding:40px 24px;">
+                <div class="cx-screen">
+                    <div class="cx-screen-label">Screen</div>
                 </div>
-                <h5 class="subtitle">silver plus</h5>
-                <div class="screen-wrapper">
-                    <ul class="seat-area">
-                        @if (_roomDetail?.RoomSeatData is not null && _roomDetail.RoomSeatData.Count > 0)
-                        {
+
+                <div style="display:flex;flex-direction:column;align-items:center;margin-top:40px;overflow-x:auto;padding-bottom:16px;">
+                    @if (_roomDetail?.RoomSeatData is not null && _roomDetail.RoomSeatData.Count > 0)
+                    {
+                        <div style="display:inline-flex;flex-direction:column;gap:10px;">
                             @foreach (var rowName in _roomDetail.RowNameData)
                             {
-                                <li class="seat-line">
-                                    <span>@rowName</span>
-                                    <ul class="seat--area">
-                                        <li class="front-seat">
-                                            <ul>
-                                                @foreach (var seat in _roomDetail.RoomSeatData)
-                                                {
-                                                    /*var matchingBooking = _bookingData.FirstOrDefault(item => item.SeatNo == seat.SeatNo);
+                                <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
+                                    <span style="width:20px;text-align:right;font-weight:700;font-size:12px;color:var(--fg-muted);">@rowName</span>
+                                    <div style="display:flex;gap:8px;">
+                                        @foreach (var seat in _roomDetail.RoomSeatData.Where(s => s.RowName == rowName))
+                                        {
+                                            if (seat.SeatNo is not null && seat.SeatNo != "null")
+                                            {
+                                                bool isBooked = _voucherDetailLst?.Any(v => v.SeatId == seat.SeatId) ?? false;
+                                                bool isSelected = _bookingData?.Any(b => b.SeatId == seat.SeatId) ?? false;
 
-                                                    var matchingVoucherSeat = _voucherDetailLst.FirstOrDefault(voucher => voucher.SeatId == seat.SeatId);*/
-
-                                                    if (seat.RowName == rowName)
-                                                    {
-                                                        /*if (seat.SeatType == "single" && (seat.SeatNo == matchingBooking.SeatNo
-                                                        || seat.SeatId == matchingVoucherSeat.SeatId))
-                                                        {
-                                                        selectedSingle = "seat01-free.png";
-                                                        }
-                                                        else if (seat.SeatType == "couple" && (seat.SeatNo == matchingBooking.SeatNo
-                                                        || seat.SeatId == matchingVoucherSeat.SeatId))
-                                                        {
-                                                        selectedCouple = "seat02-booked.png";
-                                                        }*/
-                                                        //seat.SeatNo != "null"
-                                                        if (seat.SeatNo is not null)
-                                                        {
-                                                            if (_voucherDetailLst?.Count > 0 &&
-                                                                _voucherDetailLst is not null)
-                                                            {
-                                                                foreach (var item in _voucherDetailLst)
-                                                                {
-                                                                    if (seat.SeatId == item.SeatId && seat.SeatType == "single")
-                                                                    {
-                                                                        selectedSingle = "seat01-free.png";
-                                                                    }
-                                                                    else if (seat.SeatId == item.SeatId && seat.SeatType == "couple")
-                                                                    {
-                                                                        selectedCouple = "seat02-booked.png";
-                                                                    }
-                                                                }
-                                                            }
-
-                                                            foreach (var item in _bookingData)
-                                                            {
-                                                                if (seat.SeatNo == item.SeatNo && seat.SeatType == "single")
-                                                                {
-                                                                    selectedSingle = "seat01-free.png";
-                                                                }
-                                                                else if (seat.SeatNo == item.SeatNo && seat.SeatType == "couple")
-                                                                {
-                                                                    selectedCouple = "seat02-booked.png";
-                                                                }
-                                                            }
-
-                                                            <li class="single-seat @(seat.SeatType == "couple" ? "couple" : "")">
-                                                                @if (!string.IsNullOrWhiteSpace(selectedSingle) || !string.IsNullOrWhiteSpace(selectedCouple))
-                                                                {
-                                                                    <img src="/theme/images/movie/@(seat.SeatType == "couple" ? selectedCouple : selectedSingle)"
-                                                                         @onclick="() => ToBookingList(seat)"
-                                                                         alt="seat">
-                                                                    <span class="sit-num"
-                                                                          @onclick="() => ToBookingList(seat)">
-                                                                        @rowName@seat.SeatNo
-                                                                    </span>
-                                                                }
-                                                                else
-                                                                {
-                                                                    <img src="/theme/images/movie/@(seat.SeatType == "couple" ? "seat02.png" : "seat01.png")"
-                                                                         @onclick="() => ToBookingList(seat)"
-                                                                         alt="seat">
-                                                                    <span class="sit-num"
-                                                                          @onclick="() => ToBookingList(seat)">
-                                                                        @rowName@seat.SeatNo
-                                                                    </span>
-                                                                }
-                                                            </li>
-                                                            selectedCouple = null;
-                                                            selectedSingle = null;
-                                                        }
-                                                        else
-                                                        {
-                                                            <li class="single-seat" style="padding-left: 8%;">
-                                                            </li>
-                                                        }
-                                                    }
-                                                }
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                    <span>@rowName</span>
-                                </li>
+                                                string seatClass = isBooked ? "cx-seat-booked" : (isSelected ? "cx-seat-selected" : "cx-seat-available");
+                                                
+                                                <button class="cx-seat @seatClass" disabled="@isBooked" @onclick="() => HandleSeatClick(seat)">
+                                                    @seat.SeatNo
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <div class="cx-seat cx-seat-empty"></div>
+                                            }
+                                        }
+                                    </div>
+                                    <span style="width:20px;text-align:left;font-weight:700;font-size:12px;color:var(--fg-muted);">@rowName</span>
+                                </div>
                             }
-                        }
-                    </ul>
+                        </div>
+                    }
+                </div>
+
+                <!-- Legend -->
+                <div style="display:flex;justify-content:center;gap:16px;margin-top:48px;border-top:1px solid var(--border);padding-top:24px;flex-wrap:wrap;">
+                    <div style="display:flex;align-items:center;gap:8px;"><div class="cx-seat cx-seat-selected"></div><span style="font-size:12px;color:var(--fg-muted);font-weight:500;">Selected</span></div>
+                    <div style="display:flex;align-items:center;gap:8px;"><div class="cx-seat cx-seat-available"></div><span style="font-size:12px;color:var(--fg-muted);font-weight:500;">Available</span></div>
+                    <div style="display:flex;align-items:center;gap:8px;"><div class="cx-seat cx-seat-booked"></div><span style="font-size:12px;color:var(--fg-muted);font-weight:500;">Booked</span></div>
                 </div>
             </div>
-            <!-- Chosen Seats -->
-            <center>
-                <div>
-                    @if (_bookingData is not null && _bookingData is { Count: > 0 })
+
+            <!-- Summary Area -->
+            <div>
+                <div class="cx-card" style="padding:24px;position:sticky;top:90px;">
+                    <h3 style="font-size:18px;font-weight:700;margin-bottom:16px;">Booking Summary</h3>
+                    
+                    @if (_bookingData is not null && _bookingData.Count > 0)
                     {
-                        <table class="table ">
-                            <thead>
-                            <tr>
-                                <th>You have Chosen Seat</th>
-                                <th>Seat price</th>
-                                <th>Action</th>
-                            </tr>
-                            </thead>
-                            <tbody>
+                        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
                             @foreach (var item in _bookingData)
                             {
-                                <tr class="text-white">
-                                    <td>
-                                        <h5 class="title">@item.RowName@item.SeatNo</h5>
-                                    </td>
-                                    <td class="text-right">
-                                        <h6 style="font-size:158%;">@item.SeatPrice.ToString("n0")</h6>
-                                    </td>
-                                    <td style="font-size: 185%;width: 10%;">
-                                        @* <a href="javascript:void(0);" @onclick="() => DeleteBookingSeat(item.SeatId)">
-                                <i class="fas fa-trash"></i>
-                                </a> *@
-                                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeleteBookingSeat(item.SeatId)">
-                                            <i class="fas fa-trash btn-danger"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                                <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-muted);padding:12px 14px;border-radius:var(--radius-sm);">
+                                    <div>
+                                        <div style="font-weight:700;font-size:15px;color:var(--fg);">Seat @item.RowName@item.SeatNo</div>
+                                        <div style="font-size:13px;color:var(--accent);">@item.SeatPrice.ToString("C0")</div>
+                                    </div>
+                                    <button class="cx-btn cx-btn-ghost" style="padding:6px;min-width:0;height:32px;width:32px;color:#ef4444;border-color:transparent;" @onclick="() => DeleteBookingSeat(item.SeatId)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </button>
+                                </div>
                             }
-                            </tbody>
-                        </table>
-                    }
-                    <div class="proceed-to-book me-2 ps-2" style="margin:auto;">
-                        <!--!-->
-                        <div style="padding-left: 77%;">
-                            <h6>Total Price</h6>
-                        </div><!--!-->
-                        <div class="book-item" style="margin-top: 3%;">
-                            <h6>
-                                @(_bookingData.Select(x => x.SeatPrice)
-                                    .Sum()
-                                    .ToString("n0"))
-                            </h6>
                         </div>
-                    </div>
-                    <div class="proceed-to-book my-2 justify-content-end">
-                        <a href="javascript:void(0);" @onclick="SetBookingVoucher" class="custom-button">proceed</a>
-                    </div>
-                </div>
-            </center>
 
+                        <div class="cx-divider"></div>
+                        
+                        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;">
+                            <div class="cx-price-label">Total Price</div>
+                            <div class="cx-price">@(_bookingData.Sum(x => x.SeatPrice).ToString("C0"))</div>
+                        </div>
+
+                        <button class="cx-btn cx-btn-primary" style="width:100%;height:48px;font-size:16px;" @onclick="SetBookingVoucher">
+                            Proceed to Book
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:4px;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </button>
+                    }
+                    else
+                    {
+                        <div style="text-align:center;padding:40px 0;color:var(--fg-muted);">
+                            <div style="font-size:32px;margin-bottom:12px;">💺</div>
+                            <p style="font-size:14px;">Select seats from the map to proceed.</p>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </div>
-    <!-- ==========Movie-Section========== -->
 }

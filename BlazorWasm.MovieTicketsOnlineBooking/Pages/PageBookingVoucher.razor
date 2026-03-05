@@ -1,52 +1,90 @@
-﻿@inject PageChangeStateContainer StateContainer
+﻿@page "/voucher"
+@inject NavigationManager NavManager
+@inject ITicketStoreService TicketStore
 
-<div class="movie-facility padding-bottom padding-top">
-    <div class="container">
-        <div class="row">
-            @if (_voucherDetailLst is not null && _voucherDetailLst is { Count: > 0 })
+<div class="cx-fadein" style="padding-top:60px;max-width:800px;margin:0 auto;padding-left:24px;padding-right:24px;padding-bottom:80px;">
+    @if (_isLoading)
+    {
+        <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;flex-direction:column;gap:16px;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <p style="color:var(--fg-muted);font-weight:500;">Generating Voucher...</p>
+        </div>
+    }
+    else
+    {
+        <div style="text-align:center;margin-bottom:48px;">
+        <div style="width:64px;height:64px;background:rgba(16,185,129,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#10b981;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </div>
+        <h2 style="font-size:28px;font-weight:800;color:var(--fg);margin-bottom:8px;letter-spacing:-0.02em;">Booking Confirmed!</h2>
+        <p style="color:var(--fg-muted);font-size:15px;max-width:400px;margin:0 auto;">Your tickets have been successfully booked and saved to your device.</p>
+    </div>
+
+    @if (_voucherDetailLst is not null && _voucherDetailLst.Count > 0)
+    {
+        <div style="display:flex;flex-direction:column;gap:24px;">
+            @foreach (var item in _voucherDetailLst)
             {
-                foreach (var item in _voucherDetailLst)
-                {
-                    <div class="col-md-4 pt-10">
-                        <div class="booking-summery bg-one">
-                            <h4 class="title">booking voucher</h4>
-                            <h4 class="title h5">@item.BuildingName</h4>
-                            <ul>
-                                <li>
-                                    <h6 class="subtitle mb-0">
-                                        <span>Movie Name</span><span>@item.MovieName</span>
-                                    </h6>
-                                </li>
-                                <li>
-                                    <h6 class="subtitle mb-0">
-                                        <span>Room Name</span><span>@item.RoomName</span>
-                                    </h6>
-                                </li>
-                                <li>
-                                    <h6 class="subtitle mb-0">
-                                        <span>Seat</span><span>@item.Seat</span>
-                                    </h6>
-                                </li>
-                                <li>
-                                    <h6 class="subtitle mb-0">
-                                        <span>Seat Price</span><span>@item.SeatPrice.ToString("C")</span>
-                                    </h6>
-                                </li>
-                                <li>
-                                    <h6 class="subtitle mb-0">
-                                        <span>Show Date</span><span>@item.ShowDate</span>
-                                    </h6>
-                                </li>
-                                @*<li>
-                        <h6 class="subtitle mb-0">
-                        <span>Tickets Price</span><span>$150</span>
-                        </h6>
-                        </li>*@
-                            </ul>
+                <div class="cx-ticket">
+                    <div class="cx-ticket-header">
+                        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;margin-bottom:6px;">Booking Voucher</div>
+                        <h3 style="font-size:20px;font-weight:700;color:#f8fafc;margin-bottom:4px;">@item.MovieName</h3>
+                        <div style="font-size:13px;color:#cbd5e1;">@item.BuildingName</div>
+                    </div>
+                    <div class="cx-ticket-body">
+                        <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;margin-bottom:20px;">
+                            <div>
+                                <div class="cx-price-label">Room</div>
+                                <div style="font-weight:600;font-size:15px;color:var(--fg);">@item.RoomName</div>
+                            </div>
+                            <div>
+                                <div class="cx-price-label">Seat</div>
+                                <div style="font-weight:700;font-size:16px;color:var(--accent);">@item.Seat</div>
+                            </div>
+                            <div>
+                                <div class="cx-price-label">Date</div>
+                                <div style="font-weight:600;font-size:15px;color:var(--fg);">@item.ShowDate.ToString("ddd, dd MMM yyyy")</div>
+                            </div>
+                            <div>
+                                <div class="cx-price-label">Time</div>
+                                <div style="font-weight:600;font-size:15px;color:var(--fg);">@item.ShowDate.ToString("h:mm tt")</div>
+                            </div>
+                        </div>
+                        <div class="cx-divider"></div>
+                        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:20px;">
+                            <div class="cx-price-label">Paid</div>
+                            <div class="cx-price" style="font-size:24px;">@item.SeatPrice.ToString("C0")</div>
                         </div>
                     </div>
-                }
+                </div>
             }
         </div>
-    </div>
+
+        <div style="display:flex;justify-content:center;gap:16px;margin-top:40px;">
+            <button class="cx-btn cx-btn-ghost" style="flex:1;max-width:240px;height:48px;" @onclick="GoToHome">
+                Book Another
+            </button>
+            <button class="cx-btn cx-btn-primary" style="flex:1;max-width:240px;height:48px;" @onclick="GoToMyTickets">
+                View My Tickets
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:4px;">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+            </button>
+        </div>
+    }
+    }
 </div>
+
+@code {
+    private void GoToHome()
+    {
+        NavManager.NavigateTo("/");
+    }
+
+    private void GoToMyTickets()
+    {
+        NavManager.NavigateTo("/my-tickets");
+    }
+}
