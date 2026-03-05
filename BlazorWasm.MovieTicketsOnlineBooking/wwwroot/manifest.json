@@ -9,7 +9,7 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "cinema-icon.svg",
+      "src": "favicon.svg",
       "type": "image/svg+xml",
       "sizes": "any",
       "purpose": "any maskable"
