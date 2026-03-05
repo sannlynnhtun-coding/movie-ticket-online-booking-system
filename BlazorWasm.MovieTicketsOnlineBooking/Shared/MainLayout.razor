@@ -1,7 +1,26 @@
 ﻿@inherits LayoutComponentBase
 
-@* <LoadingComponent/> *@
-@Body
+<NavMenu />
+
+<main style="min-height: calc(100vh - 64px - 100px); display: flex; flex-direction: column; position: relative;">
+    @Body
+</main>
+
+<footer class="cx-footer">
+    <div style="max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="64" height="64" rx="14" fill="#0f172a"/>
+                <circle cx="32" cy="32" r="16" fill="#0ea5e9"/>
+                <polygon points="28,24 40,32 28,40" fill="#0f172a"/>
+            </svg>
+            <span style="font-weight:700;color:var(--fg);letter-spacing:-0.02em;">Cinematix</span>
+        </div>
+        <div>
+            &copy; 2026 Cinematix. Crafted with precision via Tailwind x Blazor.
+        </div>
+    </div>
+</footer>
 
 <MudThemeProvider/>
 <MudDialogProvider/>
