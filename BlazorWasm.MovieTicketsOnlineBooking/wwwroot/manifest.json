@@ -1,12 +1,19 @@
 {
-  "name": "BlazorWasm.MovieTicketsOnlineBooking",
-  "short_name": "BlazorWasm.MovieTicketsOnlineBooking",
+  "name": "Cinematix",
+  "short_name": "Cinematix",
+  "description": "Online Movie Ticket Booking — Cinematix",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#03173d",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
   "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "cinema-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    },
     {
       "src": "icon-512.png",
       "type": "image/png",

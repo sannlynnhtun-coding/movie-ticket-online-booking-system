@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e3a5f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Film reel left strip -->
+  <rect x="4" y="16" width="6" height="32" rx="2" fill="url(#accent)" opacity="0.9"/>
+  <rect x="5" y="20" width="4" height="4" rx="1" fill="#0f172a"/>
+  <rect x="5" y="28" width="4" height="4" rx="1" fill="#0f172a"/>
+  <rect x="5" y="36" width="4" height="4" rx="1" fill="#0f172a"/>
+  <!-- Film reel right strip -->
+  <rect x="54" y="16" width="6" height="32" rx="2" fill="url(#accent)" opacity="0.9"/>
+  <rect x="55" y="20" width="4" height="4" rx="1" fill="#0f172a"/>
+  <rect x="55" y="28" width="4" height="4" rx="1" fill="#0f172a"/>
+  <rect x="55" y="36" width="4" height="4" rx="1" fill="#0f172a"/>
+  <!-- Main screen/ticket area -->
+  <rect x="12" y="18" width="40" height="28" rx="5" fill="#1e293b"/>
+  <!-- Ticket perforation dots -->
+  <circle cx="12" cy="32" r="3" fill="url(#bg)"/>
+  <circle cx="52" cy="32" r="3" fill="url(#bg)"/>
+  <!-- Play button -->
+  <circle cx="32" cy="30" r="9" fill="url(#accent)" opacity="0.95"/>
+  <polygon points="29,25 40,30 29,35" fill="#0f172a"/>
+  <!-- Star accent -->
+  <circle cx="48" cy="20" r="3" fill="#f59e0b" opacity="0.85"/>
+</svg>

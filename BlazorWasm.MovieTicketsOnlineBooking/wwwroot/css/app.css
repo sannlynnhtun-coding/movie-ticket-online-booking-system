@@ -1,0 +1,526 @@
+/* =============================================
+   Cinematix — Design System  
+   shadcn-inspired tokens + Tailwind integration
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ---- CSS Variables: Light Mode ---- */
+:root {
+  --bg: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  --bg-card: #ffffff;
+  --bg-nav: rgba(255, 255, 255, 0.85);
+  --bg-muted: #f1f5f9;
+  --fg: #0f172a;
+  --fg-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #0ea5e9;
+  --accent-hover: #0284c7;
+  --accent-fg: #ffffff;
+  --seat-avail: #e2e8f0;
+  --seat-sel: #0ea5e9;
+  --seat-booked: #ef4444;
+  --seat-booked-fg: #ffffff;
+  --shadow: 0 4px 24px rgba(14, 165, 233, 0.10);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: 0.2s ease;
+}
+
+/* ---- CSS Variables: Dark Mode ---- */
+.dark {
+  --bg: #0f172a;
+  --bg-glass: rgba(15, 23, 42, 0.7);
+  --bg-card: #1e293b;
+  --bg-nav: rgba(15, 23, 42, 0.90);
+  --bg-muted: #1e293b;
+  --fg: #e2e8f0;
+  --fg-muted: #94a3b8;
+  --border: #334155;
+  --accent: #0ea5e9;
+  --accent-hover: #38bdf8;
+  --accent-fg: #ffffff;
+  --seat-avail: #334155;
+  --seat-sel: #0ea5e9;
+  --seat-booked: #ef4444;
+  --seat-booked-fg: #ffffff;
+  --shadow: 0 4px 32px rgba(0, 0, 0, 0.40);
+}
+
+/* ---- Reset & Base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  transition: background-color var(--transition), color var(--transition);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ---- Cinematix Component Classes ---- */
+
+/* Card */
+.cx-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.cx-card:hover {
+  box-shadow: 0 8px 40px rgba(14, 165, 233, 0.18);
+  transform: translateY(-2px);
+}
+
+/* Button */
+.cx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+  letter-spacing: 0.01em;
+}
+
+.cx-btn-primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.cx-btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+}
+
+.cx-btn-ghost {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+.cx-btn-ghost:hover {
+  background: var(--bg-muted);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cx-btn-danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.cx-btn-danger:hover {
+  background: #dc2626;
+}
+
+/* Badge */
+.cx-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cx-badge-accent {
+  background: rgba(14, 165, 233, 0.15);
+  color: var(--accent);
+}
+
+.cx-badge-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.cx-badge-muted {
+  background: var(--bg-muted);
+  color: var(--fg-muted);
+}
+
+/* Input */
+.cx-input {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+
+.cx-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.20);
+}
+
+.cx-input::placeholder {
+  color: var(--fg-muted);
+}
+
+/* Header / Nav */
+.cx-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-glass);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 12px 24px;
+  transition: background var(--transition);
+}
+
+.cx-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cx-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cx-logo-text {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--accent) 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Seat Map */
+.cx-screen {
+  position: relative;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.cx-screen::before {
+  content: '';
+  display: block;
+  width: 70%;
+  height: 6px;
+  margin: 0 auto 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(14, 165, 233, 0.6);
+  filter: blur(1px);
+}
+
+.cx-screen-label {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  font-weight: 600;
+}
+
+.cx-seat {
+  width: 28px;
+  height: 24px;
+  min-width: 28px;
+  border-radius: 6px 6px 4px 4px;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.cx-seat-available {
+  background: var(--seat-avail);
+  color: #94a3b8;
+}
+
+.cx-seat-available:hover {
+  background: rgba(14, 165, 233, 0.5);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.cx-seat-selected {
+  background: var(--seat-sel);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.5);
+}
+
+.cx-seat-booked {
+  background: var(--seat-booked);
+  color: var(--seat-booked-fg);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.cx-seat-empty {
+  background: transparent;
+  cursor: default;
+}
+
+/* Ticket voucher card */
+.cx-ticket {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.cx-ticket-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  padding: 20px 24px;
+  border-bottom: 2px dashed var(--border);
+  position: relative;
+}
+
+.cx-ticket-header::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  bottom: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.cx-ticket-header::after {
+  content: '';
+  position: absolute;
+  right: -14px;
+  bottom: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.cx-ticket-body {
+  padding: 20px 24px;
+}
+
+/* Movie card */
+.cx-movie-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all var(--transition);
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.cx-movie-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 40px rgba(14, 165, 233, 0.2);
+  transform: translateY(-4px);
+}
+
+.cx-movie-poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  display: block;
+}
+
+.cx-movie-body {
+  padding: 14px;
+}
+
+.cx-movie-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cx-movie-meta {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+/* Footer */
+.cx-footer {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+/* Fade-in animation */
+@keyframes cx-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cx-fadein {
+  animation: cx-fadein 0.4s ease forwards;
+}
+
+/* Theme toggle */
+.cx-theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.cx-theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Divider */
+.cx-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* Section header */
+.cx-section-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.cx-section-subtitle {
+  font-size: 14px;
+  color: var(--fg-muted);
+  margin-top: 4px;
+}
+
+/* Chip date selector */
+.cx-date-chip {
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  background: var(--bg-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.cx-date-chip:hover,
+.cx-date-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Price display */
+.cx-price {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+}
+
+.cx-price-label {
+  font-size: 12px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+/* My-Tickets page row */
+.cx-my-ticket-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition: border-color var(--transition);
+}
+
+.cx-my-ticket-row:hover {
+  border-color: var(--accent);
+}

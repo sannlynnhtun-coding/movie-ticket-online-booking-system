@@ -5,46 +5,71 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-    <meta property="og:title" content="Blazor WASM - MovieTicketsOnlineBooking">
-    <meta name="twitter:title" content="Blazor WASM - MovieTicketsOnlineBooking">
-    <meta name="description" content="Blazor WASM - MovieTicketsOnlineBooking">
-    <meta property="og:description" content="Blazor WASM - MovieTicketsOnlineBooking">
-    <meta name="twitter:description" content="Blazor WASM - MovieTicketsOnlineBooking">
-    <meta property="og:image" content="https://blazor-wasm-movie-ticket-online.netlify.app/favicon.png">
-    <meta name="twitter:image" content="https://blazor-wasm-movie-ticket-online.netlify.app/favicon.png">
-    <title>Movie Tickets Online Booking</title>
+    <meta property="og:title" content="Cinematix — Movie Ticket Booking">
+    <meta name="twitter:title" content="Cinematix — Movie Ticket Booking">
+    <meta name="description" content="Book movie tickets online with Cinematix — fast, easy, and beautiful.">
+    <meta property="og:description" content="Book movie tickets online with Cinematix — fast, easy, and beautiful.">
+    <meta name="twitter:description" content="Book movie tickets online with Cinematix — fast, easy, and beautiful.">
+    <meta property="og:image" content="https://blazor-wasm-movie-ticket-online.netlify.app/cinema-icon.svg">
+    <meta name="twitter:image" content="https://blazor-wasm-movie-ticket-online.netlify.app/cinema-icon.svg">
+    <meta name="theme-color" content="#0ea5e9">
+
+    <title>Cinematix — Movie Tickets</title>
     <base href="/" />
+
+    <!-- PWA manifest -->
     <link href="manifest.json" rel="manifest" />
+
+    <!-- SVG Favicon (primary) -->
+    <link rel="icon" type="image/svg+xml" href="cinema-icon.svg">
+    <!-- Fallback PNG icons -->
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
 
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <!-- MudBlazor -->
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
 
-    <link rel="stylesheet" href="theme/css/bootstrap.min.css">
-    <link rel="stylesheet" href="theme/css/all.min.css">
-    <link rel="stylesheet" href="theme/css/animate.css">
-    <link rel="stylesheet" href="theme/css/flaticon.css">
-    <link rel="stylesheet" href="theme/css/magnific-popup.css">
-    <link rel="stylesheet" href="theme/css/odometer.css">
-    <link rel="stylesheet" href="theme/css/owl.carousel.min.css">
-    <link rel="stylesheet" href="theme/css/owl.theme.default.min.css">
-    <link rel="stylesheet" href="theme/css/nice-select.css">
-    <link rel="stylesheet" href="theme/css/jquery.animatedheadline.css">
-    <link rel="stylesheet" href="theme/css/main.css">
+    <!-- Custom design system (CSS variables, component classes) -->
+    <link rel="stylesheet" href="css/app.css">
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-          integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Theme initialiser: apply saved theme before first paint to prevent flash -->
+    <script>
+        (function () {
+            var saved = localStorage.getItem('cx-theme') || 'dark';
+            if (saved === 'dark') document.documentElement.classList.add('dark');
+        })();
+    </script>
 
-    <link rel="shortcut icon" href="theme/images/favicon.png" type="image/x-icon">
+    <!-- Tailwind CDN with Cinematix config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        accent:  { DEFAULT: '#0ea5e9', hover: '#0284c7', 300: '#7dd3fc', 500: '#0ea5e9' },
+                        surface: { DEFAULT: '#1e293b', dark: '#0f172a', card: '#1e293b' },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    borderRadius: {
+                        'cx': '12px'
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
+        /* Legacy theme CSS kept for optional override, MudBlazor compat */
         #blazor-error-ui {
-            background: lightyellow;
+            background: #1e293b;
+            color: #e2e8f0;
+            border-top: 1px solid #334155;
             bottom: 0;
-            box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.4);
             display: none;
             left: 0;
             padding: 0.6rem 1.25rem 0.7rem 1.25rem;
@@ -52,47 +77,79 @@
             width: 100%;
             z-index: 1000;
         }
-
-            #blazor-error-ui .dismiss {
-                cursor: pointer;
-                position: absolute;
-                right: 0.75rem;
-                top: 0.5rem;
-            }
-
+        #blazor-error-ui .dismiss {
+            cursor: pointer;
+            position: absolute;
+            right: 0.75rem;
+            top: 0.5rem;
+        }
         .blazor-error-boundary {
-            background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+            background: #7f1d1d;
             padding: 1rem 1rem 1rem 3.7rem;
             color: white;
+            border-radius: 8px;
         }
-
-            .blazor-error-boundary::after {
-                content: "An error has occurred."
-            }
+        .blazor-error-boundary::after { content: "An error has occurred." }
     </style>
 </head>
 
 <body>
     <div id="app">
+        <!-- Loading splash while Blazor boots -->
+        <div style="
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            min-height:100vh;background:#0f172a;gap:20px;font-family:'Inter',sans-serif;">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#0f172a"/>
+                        <stop offset="100%" stop-color="#1e3a5f"/>
+                    </linearGradient>
+                    <linearGradient id="a2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8"/>
+                        <stop offset="100%" stop-color="#0ea5e9"/>
+                    </linearGradient>
+                </defs>
+                <rect width="64" height="64" rx="14" fill="url(#bg2)"/>
+                <rect x="4" y="16" width="6" height="32" rx="2" fill="url(#a2)" opacity="0.9"/>
+                <rect x="5" y="20" width="4" height="4" rx="1" fill="#0f172a"/>
+                <rect x="5" y="28" width="4" height="4" rx="1" fill="#0f172a"/>
+                <rect x="5" y="36" width="4" height="4" rx="1" fill="#0f172a"/>
+                <rect x="54" y="16" width="6" height="32" rx="2" fill="url(#a2)" opacity="0.9"/>
+                <rect x="55" y="20" width="4" height="4" rx="1" fill="#0f172a"/>
+                <rect x="55" y="28" width="4" height="4" rx="1" fill="#0f172a"/>
+                <rect x="55" y="36" width="4" height="4" rx="1" fill="#0f172a"/>
+                <rect x="12" y="18" width="40" height="28" rx="5" fill="#1e293b"/>
+                <circle cx="12" cy="32" r="3" fill="url(#bg2)"/>
+                <circle cx="52" cy="32" r="3" fill="url(#bg2)"/>
+                <circle cx="32" cy="30" r="9" fill="url(#a2)" opacity="0.95"/>
+                <polygon points="29,25 40,30 29,35" fill="#0f172a"/>
+                <circle cx="48" cy="20" r="3" fill="#f59e0b" opacity="0.85"/>
+            </svg>
+            <p style="color:#94a3b8;font-size:14px;letter-spacing:0.05em;">Loading Cinematix…</p>
+        </div>
     </div>
 
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <!-- Blazor WASM -->
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
-    <script src="theme/js/jquery-3.3.1.min.js"></script>
-    <script src="theme/js/modernizr-3.6.0.min.js"></script>
-    <script src="theme/js/plugins.js"></script>
-    <script src="theme/js/bootstrap.min.js"></script>
-    <script src="theme/js/heandline.js"></script>
-    <script src="theme/js/isotope.pkgd.min.js"></script>
-    <script src="theme/js/magnific-popup.min.js"></script>
-    <script src="theme/js/owl.carousel.min.js"></script>
-    <script src="theme/js/wow.min.js"></script>
-    <script src="theme/js/countdown.min.js"></script>
-    <script src="theme/js/odometer.min.js"></script>
-    <script src="theme/js/viewport.jquery.js"></script>
-    <script src="theme/js/nice-select.js"></script>
-    <script src="theme/js/main.js"></script>
+
+    <!-- Cinematix IndexedDB + theme module (must load before Blazor calls it) -->
+    <script src="js/indexeddb.js"></script>
+
+    <!-- MudBlazor JS -->
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+
+    <!-- Legacy theme JS (kept only for backward compat) -->
+    <script src="theme/js/jquery-3.3.1.min.js"></script>
+    <script src="theme/js/plugins.js"></script>
+    <script src="theme/js/main.js"></script>
 </body>
 
 </html>
